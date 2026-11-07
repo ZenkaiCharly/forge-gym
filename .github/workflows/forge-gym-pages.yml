@@ -1,0 +1,45 @@
+name: Publicar Forge Gym
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Forge-Gym-0.3.0-GitHub-Pages.zip
+      - .github/workflows/forge-gym-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/configure-pages@v5
+      - name: Preparar archivos web
+        run: |
+          unzip -q Forge-Gym-0.3.0-GitHub-Pages.zip -d site
+          test -f site/index.html
+          test -d site/_expo
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
